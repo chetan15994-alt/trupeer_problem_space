@@ -1,0 +1,898 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<title>Where company knowledge goes: Trupeer's problem space in 3D</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#EDF0F6; --bg2:#FCFDFF; --veil:rgba(237,240,246,.9); --ink:#131A2C; --muted:#56607A;
+  --panel:rgba(255,255,255,.88); --tag:rgba(255,255,255,.9); --line:rgba(19,26,44,.10); --line2:rgba(19,26,44,.24); --chip:rgba(19,26,44,.045);
+  --c-sources:#B5720C; --c-risks:#D23F3F; --c-barriers:#BF3A8C; --c-status:#67728C; --c-core:#0C9488;
+  --c-consumers:#2470CC; --c-usecases:#7350D2; --c-segments:#5A8410; --c-outcomes:#16935A;
+  --spark:#B06A00; --lost:#D23F3F; --on-core:#FFFFFF; --core-wash:rgba(12,148,136,.10);
+  --font:"Schibsted Grotesk",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  color-scheme:light; box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#0D1220; --bg2:#1A2444; --veil:rgba(13,18,32,.88); --ink:#E8ECF6; --muted:#98A3BF;
+    --panel:rgba(16,22,40,.82); --tag:rgba(13,18,32,.76); --line:rgba(232,236,246,.11); --line2:rgba(232,236,246,.26); --chip:rgba(232,236,246,.06);
+    --c-sources:#F5C451; --c-risks:#FF6B6B; --c-barriers:#F07ACB; --c-status:#9AA6BF; --c-core:#4FE3D3;
+    --c-consumers:#6CB6FF; --c-usecases:#B396FF; --c-segments:#C6EC68; --c-outcomes:#79F09A;
+    --spark:#FFE39A; --lost:#FF5A5A; --on-core:#052421; --core-wash:rgba(79,227,211,.11); color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0D1220; --bg2:#1A2444; --veil:rgba(13,18,32,.88); --ink:#E8ECF6; --muted:#98A3BF;
+  --panel:rgba(16,22,40,.82); --tag:rgba(13,18,32,.76); --line:rgba(232,236,246,.11); --line2:rgba(232,236,246,.26); --chip:rgba(232,236,246,.06);
+  --c-sources:#F5C451; --c-risks:#FF6B6B; --c-barriers:#F07ACB; --c-status:#9AA6BF; --c-core:#4FE3D3;
+  --c-consumers:#6CB6FF; --c-usecases:#B396FF; --c-segments:#C6EC68; --c-outcomes:#79F09A;
+  --spark:#FFE39A; --lost:#FF5A5A; --on-core:#052421; --core-wash:rgba(79,227,211,.11); color-scheme:dark;
+}
+*,*::before,*::after{box-sizing:inherit}
+[hidden]{display:none !important}
+html{height:100%;scroll-padding-top:env(safe-area-inset-top,0px)}
+body{height:100%;margin:0;overflow:hidden;background:var(--bg);color:var(--ink);font-family:var(--font);-webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent}
+button{font-family:inherit}
+:focus-visible{outline:2px solid var(--c-core);outline-offset:2px}
+#app{position:relative;height:100%;overflow:hidden;background:radial-gradient(125% 90% at 50% 40%,var(--bg2) 0%,var(--bg) 64%)}
+#gl{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none;cursor:grab;outline:none}
+#gl.drag{cursor:grabbing}#gl.hov{cursor:pointer}
+#labels{position:absolute;inset:0;z-index:1;pointer-events:none;overflow:hidden}
+.topfade{position:absolute;left:0;right:0;top:0;height:118px;z-index:4;pointer-events:none;background:linear-gradient(180deg,color-mix(in srgb,var(--bg) 94%,transparent) 0%,color-mix(in srgb,var(--bg) 60%,transparent) 52%,transparent 100%)}
+.is-intro .topfade{opacity:0}
+.lbl{position:absolute;left:0;top:0;will-change:transform;opacity:0;transition:opacity .3s ease}
+.lbl.on{opacity:1}.lbl.on.dim{opacity:.42}
+.lbl>span{display:inline-block;transform:translate(-50%,calc(-100% - 11px));white-space:nowrap;font-size:11.5px;font-weight:600;line-height:1.2;padding:3px 7px;border-radius:7px;background:var(--tag);color:var(--ink);border:1px solid var(--line);pointer-events:none}
+.lbl.on.tap>span{pointer-events:auto;cursor:pointer}
+.lbl.sel>span{background:var(--ink);color:var(--bg);border-color:transparent}
+.clbl>span{display:inline-flex;align-items:center;gap:6px;transform:translate(-50%,-50%);font-size:13px;font-weight:700;padding:4px 10px 4px 8px;border-radius:999px}
+.clbl>span i{width:8px;height:8px;border-radius:50%;background:var(--c);flex:none}
+.core-l>span{font-size:13.5px;font-weight:800;color:var(--on-core);background:var(--c-core);border-color:transparent}
+.rlbl>span{transform:translate(-50%,-50%);background:transparent;border:0;padding:0;font-size:11px;font-weight:700;color:var(--c-core);letter-spacing:.02em}
+.vlbl>span{transform:translate(-50%,-50%);background:transparent;border:0;padding:0;font-size:12.5px;font-weight:700;color:var(--lost)}
+.zlbl>span{transform:translate(-50%,-50%);background:transparent;border:0;padding:0;font-size:22px;font-weight:800;letter-spacing:-.01em;color:var(--muted);opacity:.6}
+.bar{position:absolute;top:0;left:0;right:0;z-index:5;display:flex;justify-content:space-between;align-items:flex-start;gap:12px;padding:12px 14px 0;pointer-events:none}
+.bar>*{pointer-events:auto}
+.bar,.mode,.zoom{transition:opacity .6s ease}
+.is-intro .bar,.is-intro .mode,.is-intro .zoom{opacity:0;pointer-events:none}
+.is-intro .bar>*{pointer-events:none}
+.ttl{min-width:0}
+.ttl h1{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin:0;font-size:16px;line-height:1.2;font-weight:800;letter-spacing:-.01em}
+.ttl p{margin:2px 0 0;font-size:12px;color:var(--muted)}
+.ghost{font-size:13px;font-weight:600;color:var(--ink);background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:7px 12px;-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);cursor:pointer;white-space:nowrap}
+.mode{position:absolute;top:50px;left:50%;transform:translateX(-50%);z-index:5;display:flex;padding:3px;border-radius:999px;background:var(--panel);border:1px solid var(--line);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px)}
+.mode button{font-size:13px;font-weight:600;border:0;background:transparent;color:var(--muted);padding:7px 14px;border-radius:999px;cursor:pointer;white-space:nowrap;transition:background .25s,color .25s}
+.mode button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+.mode button[data-mode="with"][aria-pressed="true"]{background:var(--c-core);color:var(--on-core)}
+.zoom{position:absolute;right:12px;top:50%;z-index:5;display:flex;flex-direction:column;gap:6px;transform:translateY(-50%)}
+.zoom button{width:40px;height:40px;border-radius:12px;border:1px solid var(--line);background:var(--panel);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);color:var(--ink);font-size:21px;font-weight:600;line-height:1;cursor:pointer;display:grid;place-items:center;padding:0}
+.zoom button.fit{font-size:11.5px;font-weight:700}
+.zoom button:active{transform:scale(.94)}
+.sheet{position:absolute;left:0;right:0;bottom:0;z-index:6;max-height:58%;overflow:auto;background:var(--panel);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);border-top:1px solid var(--line);border-radius:20px 20px 0 0;padding:6px 16px 14px}
+.handle{display:block;margin:0 auto 4px;width:56px;height:18px;border:0;background:transparent;cursor:pointer;position:relative;padding:0}
+.handle::before{content:"";position:absolute;left:14px;right:14px;top:7px;height:4px;border-radius:2px;background:var(--line2)}
+@media (max-width:899px){.sheet.mini .hide-mini{display:none}}
+.sheet h2{margin:0 0 4px;font-size:18px;line-height:1.22;font-weight:800;letter-spacing:-.01em;padding-right:30px}
+.sheet p{margin:0 0 10px;font-size:14px;line-height:1.48}
+.prog{display:flex;align-items:center;gap:10px;font-size:12px;color:var(--muted);margin-bottom:6px}
+.dots{display:flex;gap:4px}.dots i{width:14px;height:4px;border-radius:2px;background:var(--line2)}.dots i.on{background:var(--ink)}
+.imp,.fix{border-radius:0 10px 10px 0;padding:8px 11px;margin:0 0 10px}
+.imp{border-left:3px solid var(--ink);background:var(--chip)}
+.fix{border-left:3px solid var(--c-core);background:var(--core-wash)}
+.imp b,.fix b{display:block;font-size:11.5px;font-weight:700;margin-bottom:2px;color:var(--muted)}
+.fix b{color:var(--c-core)}
+.sheet .imp p,.sheet .fix p{margin:0;font-size:13.5px;line-height:1.45}
+.ctas{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.primary{font-weight:700;font-size:14px;border:0;border-radius:999px;padding:10px 18px;background:var(--ink);color:var(--bg);cursor:pointer;white-space:nowrap}
+.secondary{font-weight:600;font-size:14px;border:1px solid var(--line2);border-radius:999px;padding:9px 16px;background:transparent;color:var(--ink);cursor:pointer;white-space:nowrap}
+.link{font-size:13px;color:var(--muted);background:none;border:0;text-decoration:underline;text-underline-offset:3px;cursor:pointer;padding:6px 2px;margin-left:auto;white-space:nowrap}
+.hint{color:var(--muted)}
+.chips{display:flex;gap:6px;margin:2px 0 10px;flex-wrap:wrap}
+.chips.scroll{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;margin-left:-16px;margin-right:-16px;padding:0 16px}
+.chips.scroll::-webkit-scrollbar{display:none}
+.chip{font-size:12.5px;font-weight:600;display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--chip);color:var(--ink);border-radius:999px;padding:5px 10px 5px 8px;cursor:pointer;white-space:nowrap;flex:none}
+.chip i{width:8px;height:8px;border-radius:50%;background:var(--c);flex:none}
+.key{display:flex;flex-wrap:wrap;gap:6px 14px;margin:0 0 10px;font-size:12.5px;color:var(--muted)}
+.key span{display:inline-flex;align-items:center;gap:6px}
+.k-dot{display:inline-block;width:8px;height:8px;border-radius:50%}
+.k-line{display:inline-block;width:16px;height:3px;border-radius:2px}
+.k-dia{display:inline-block;width:8px;height:8px;transform:rotate(45deg)}
+.kick{display:flex;align-items:center;gap:7px;font-size:12.5px;font-weight:600;color:var(--muted);margin-bottom:4px}
+.kick i{width:9px;height:9px;border-radius:50%;background:var(--c)}
+.conn h3{font-size:12px;font-weight:600;color:var(--muted);margin:2px 0 6px}
+.x{position:absolute;top:10px;right:12px;width:32px;height:32px;border-radius:50%;border:1px solid var(--line);background:var(--chip);color:var(--ink);font-size:18px;line-height:1;cursor:pointer;z-index:1}
+.intro{position:absolute;inset:0;z-index:10;display:flex;align-items:flex-end;justify-content:center;padding:24px 22px 30px;background:linear-gradient(180deg,transparent 0%,transparent 34%,var(--veil) 64%,var(--bg) 100%);transition:opacity .7s ease}
+.intro.out{opacity:0;pointer-events:none}
+.intro-in{max-width:36rem;width:100%}
+.kick2{font-size:13px;font-weight:600;color:var(--muted);margin:0 0 10px}
+.big{font-size:clamp(2.5rem,9vw + .4rem,5rem);line-height:.96;letter-spacing:-.035em;font-weight:800;margin:0 0 16px;max-width:10ch}
+.lead{font-size:16px;line-height:1.5;margin:0 0 20px;max-width:30rem}
+.credit{font-size:12px;color:var(--muted);margin:18px 0 0}
+.list{position:absolute;inset:0;z-index:12;overflow:auto;background:var(--bg);padding:16px 18px 48px}
+.list .wrap{max-width:42rem;margin:0 auto}
+.lhead{display:flex;justify-content:space-between;align-items:center;gap:12px;margin:4px 0 6px}
+.lhead h2{margin:0;font-size:22px;font-weight:800;letter-spacing:-.01em}
+.list .muted{color:var(--muted)}
+.list section{margin:22px 0 0;padding-left:14px;border-left:3px solid var(--c,var(--line2))}
+.list h3{margin:0 0 4px;font-size:17px;font-weight:700}
+.list ul{margin:8px 0 0;padding-left:18px}.list li{margin:0 0 9px;line-height:1.5;font-size:15px}
+.list .impl{margin:8px 0 0;font-size:14px;border-left:3px solid var(--ink);padding:5px 10px;background:var(--chip);border-radius:0 8px 8px 0}
+.ansl{display:block;color:var(--c-core);font-size:14px;margin-top:2px}
+.impl2{display:block;color:var(--muted);font-size:13.5px;margin-top:2px}
+.list a{color:var(--c-consumers)}
+.nogl{position:absolute;left:16px;right:16px;top:110px;z-index:7;padding:14px 16px;border-radius:14px;background:var(--panel);border:1px solid var(--line);font-size:14px}
+@media (max-width:480px){.ttl h1{font-size:14px}.ttl p{display:none}}
+@media (min-width:900px){
+  .bar{padding:18px 20px 0}
+  .ttl h1{font-size:19px}.ttl p{font-size:13px}
+  .mode{top:20px}
+  .zoom{right:20px}
+  .sheet{left:16px;right:16px;bottom:16px;max-height:46%;border-radius:18px;border:1px solid var(--line);padding:16px 22px}
+  .handle{display:none}
+  .g{display:grid;gap:26px;align-items:center}
+  .g.c3{grid-template-columns:minmax(300px,1.3fr) minmax(260px,1fr) auto}
+  .g.c2{grid-template-columns:minmax(300px,1.2fr) minmax(300px,1fr);padding-right:36px}
+  .g .imp,.g .fix{margin:0}
+  .g .g-main>p:last-child{margin-bottom:0}
+  .g-side{display:flex;flex-direction:column;gap:10px}
+  .g-side .chips{margin:0}
+  .ctas.v{display:grid;grid-template-columns:auto auto;gap:8px;justify-content:end}
+  .ctas.v .link{grid-column:1 / -1;margin:0;text-align:center}
+  .chips.scroll{flex-wrap:wrap;margin-left:0;margin-right:0;padding:0}
+  .intro{align-items:center;justify-content:flex-start;padding:24px 8vw;background:linear-gradient(90deg,var(--bg) 0%,var(--veil) 34%,transparent 72%)}
+}
+@media (prefers-reduced-motion:reduce){.lbl,.intro,.mode button,.bar,.mode,.zoom{transition:none}}
+</style>
+</head>
+<body>
+<div id="app" class="is-intro">
+  <canvas id="gl" aria-hidden="true"></canvas>
+  <div id="labels" aria-hidden="true"></div>
+  <div class="topfade" aria-hidden="true"></div>
+  <header class="bar">
+    <div class="ttl"><h1>Where company knowledge goes</h1><p>Trupeer's problem space, in 3D</p></div>
+    <button class="ghost" id="btnList" type="button">List view</button>
+  </header>
+  <div class="mode" role="group" aria-label="Scenario">
+    <button type="button" data-mode="without" aria-pressed="true">Without Trupeer</button>
+    <button type="button" data-mode="with" aria-pressed="false">With Trupeer</button>
+  </div>
+  <div class="zoom" role="group" aria-label="Zoom controls">
+    <button type="button" data-zoom="in" aria-label="Zoom in" title="Zoom in">+</button>
+    <button type="button" data-zoom="out" aria-label="Zoom out" title="Zoom out">−</button>
+    <button type="button" data-zoom="fit" class="fit" aria-label="Fit to screen" title="Fit to screen">Fit</button>
+  </div>
+  <section class="sheet" id="sheet" aria-live="polite" hidden></section>
+  <div class="nogl" id="nogl" hidden>Your browser couldn't start 3D, so here is the same map as a list.</div>
+  <div class="intro" id="intro">
+    <div class="intro-in">
+      <p class="kick2">A map of Trupeer's problem space</p>
+      <h2 class="big">Where company knowledge goes</h2>
+      <p class="lead">Nine short steps, about a minute. Then explore on your own: turn it, zoom in, and switch between a company without Trupeer and one with it.</p>
+      <div class="ctas"><button class="primary" id="btnStory" type="button">Start the story</button><button class="secondary" id="btnExplore" type="button">Explore on my own</button></div>
+      <p class="credit">Made by Chetan, October 2026</p>
+    </div>
+  </div>
+  <section class="list" id="list" hidden aria-label="The map as a list"></section>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(function(){
+'use strict';
+const $ = s => document.querySelector(s);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const zoomEl = $('.zoom'), app = $('#app'), sheet = $('#sheet'), labelsEl = $('#labels'), intro = $('#intro'), listEl = $('#list');
+const RM = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* ---------------- data ---------------- */
+const CLUSTERS = [
+  {id:'sources',   name:'Where knowledge lives',     blurb:"Know-how that lives in people's heads, habits and clicks.", imp:'Capture has to start from the work itself, not from a blank page.', c:[-5.4, 4.6, 1.6], r:1.55},
+  {id:'barriers',  name:'Why nobody writes it down', blurb:'Five reasons documentation keeps slipping.', imp:'Each reason is a product requirement: no extra effort, no special skills, polished by default, one tool.', c:[-7.1, 0.2,-1.6], r:1.6},
+  {id:'risks',     name:'How it gets lost',          blurb:'The moments when knowledge leaves with people.', imp:"Capturing a handover must be quick enough to finish in someone's last week.", c:[-5.4,-4.6, 1.8], r:1.6},
+  {id:'status',    name:'How teams cope today',      blurb:'Several tools, with gaps between them.', imp:'Owning the whole journey, from recording to answering, beats being one more tool.', c:[ 0.0,-7.0,-1.5], r:1.35},
+  {id:'core',      name:'What Trupeer does',         blurb:'Create, store and answer, in one place.', imp:'The edge is the full loop: create, store and answer, and keep it all up to date.', c:[ 0.0, 0.0, 0.0], r:3.1},
+  {id:'consumers', name:'Who uses it',               blurb:'People, and now AI agents.', imp:'Knowledge now has two readers, people and AI agents, and both need clear steps and sources.', c:[ 6.3, 3.6, 1.5], r:1.65},
+  {id:'usecases',  name:"Where it's used",           blurb:'Everyday jobs that need written-down knowledge.', imp:'Each job needs its own starting point, like a template for handovers or for training.', c:[ 7.0,-1.2,-1.8], r:1.7},
+  {id:'outcomes',  name:'What changes',              blurb:'What a company gets back.', imp:'Prove the value with numbers: processes covered, guides used, time for new people to get productive.', c:[ 5.0,-5.2, 1.8], r:1.55},
+  {id:'segments',  name:"Who it's built for",        blurb:'Companies where the problem hurts most.', imp:'Large companies will expect security reviews, single sign-on and admin controls.', c:[ 0.0, 7.2,-2.0], r:1.4}
+];
+const NODES = [
+  {id:'src_head',   cl:'sources', name:'What experts know',      desc:"Judgement calls, workarounds and client history that live in one person's head.", imp:"Let experts talk through a task while doing it. That's faster than writing."},
+  {id:'src_tribal', cl:'sources', name:'Word-of-mouth know-how', desc:'How things really get done, passed from person to person and never written down.', imp:'Capturing should feel like showing a colleague, not writing a document.'},
+  {id:'src_screen', cl:'sources', name:'Steps done on screen',   desc:'Processes that exist only as clicks in a CRM, an ERP or an internal tool.', imp:'A screen recording captures these steps exactly, without anyone typing them up.'},
+  {id:'src_docs',   cl:'sources', name:'Old, scattered docs',    desc:'Docs, slides and wiki pages that exist, but are hard to find and often out of date.', imp:'Bring existing docs in, so the new library starts full rather than empty.'},
+  {id:'bar_urgent', cl:'barriers', name:'Never urgent',          desc:'Writing things down is always important but never due today, so it slips.', fix:'Capture happens while you do the task, so it takes almost no extra time.', imp:'Every extra step is a reason to skip it. Starting must take one click.'},
+  {id:'bar_creator',cl:'barriers', name:"Experts aren't writers", desc:"The people who know the most usually aren't writers, designers or video editors.", fix:'No writing or editing skills needed: you just record your screen.', imp:"Design for the expert's skills, not a content team's."},
+  {id:'bar_present',cl:'barriers', name:'Must look professional', desc:'If a manager, another team or a client will see it, it has to look polished, and that feels like pressure.', fix:'AI removes the stumbles and adds a studio-quality voice, so it looks professional by default.', imp:'Good quality must be automatic. The first version should be ready to share.'},
+  {id:'bar_format', cl:'barriers', name:'Formatting takes hours', desc:'Screenshots, numbered steps and edits turn a quick walkthrough into hours of work.', fix:'The step-by-step guide and its screenshots are made for you.', imp:'Build the structure automatically: steps, screenshots and titles.'},
+  {id:'bar_tools',  cl:'barriers', name:'Too many tools',        desc:'Record in one place, store in another, search in a third.', fix:'Create, store and answer questions in one place.', imp:'Every hand-off between tools is a place where knowledge gets lost.'},
+  {id:'risk_resign',cl:'risks', name:'People resign',          desc:'The notice period is often the only chance for a handover, and the replacement may not be hired yet.', imp:'Offer a guided handover: what to record, and in what order, before the last day.'},
+  {id:'risk_promo', cl:'risks', name:'People get promoted',    desc:'They move up, but the know-how stays tied to the old job.', imp:"Make 'record it before you move' a normal part of changing roles."},
+  {id:'risk_role',  cl:'risks', name:'Work changes hands',     desc:'Someone new takes over a process, usually without the full context.', imp:'Show who made each guide and when, so new owners know what to trust.'},
+  {id:'risk_change',cl:'risks', name:'Teams reorganise',       desc:'Teams and processes change faster than documents can keep up.', imp:'Flag guides that may be out of date after a process changes.'},
+  {id:'risk_tools', cl:'risks', name:'New tools arrive',       desc:'A new CRM or HR system means everyone needs the same how-to, fast.', imp:'One recording should reach every team, in every language, on day one.'},
+  {id:'sq_record',  cl:'status', name:'Raw screen recordings', desc:'Quick to make, but raw: pauses, detours and no written steps. Loom is a common example.', imp:"Video alone isn't enough. People also need written steps they can skim."},
+  {id:'sq_wiki',    cl:'status', name:'Hand-written wikis',    desc:'Where knowledge is supposed to live, but written by hand and often out of date. Think Notion or Confluence.', imp:'Wikis prove people want one home for knowledge. Filling and updating it is the hard part.'},
+  {id:'sq_bot',     cl:'status', name:'Separate search tools', desc:'Added later, and only as good as whatever made it into the wiki.', imp:'AI answers are only as good as the knowledge underneath them.'},
+  {id:'core_trupeer', cl:'core', name:'Trupeer', desc:'Turns how work actually gets done into videos and guides, for people and for AI agents. Trupeer calls itself the workflow knowledge layer for enterprises, and says 50,000+ teams in 100+ countries use it.', imp:'Its edge is covering the whole journey: capture, store and answer.'},
+  {id:'c_record',  cl:'core', name:'Record your screen once',  desc:"Talk through the task while you do it, using Trupeer's screen recorder.", imp:'The recorder is the front door. It has to be instant and reliable.'},
+  {id:'c_polish',  cl:'core', name:'AI cleans it up',          desc:'Filler words, pauses and mistakes are cut. Zooms and captions are added automatically.', imp:'Clean-up lets anyone share their work without worrying how they sound.'},
+  {id:'c_voice',   cl:'core', name:'AI voice, 120+ languages', desc:"A studio-quality voiceover, optional AI avatars (including HeyGen's), and translation for global teams.", imp:'One recording can serve every region, instead of re-recording in each language.'},
+  {id:'c_sop',     cl:'core', name:'Video + written guide',    desc:'One recording gives both a finished video and a step-by-step guide with screenshots.', imp:'Some people watch, some skim. Offering both means more people actually use it.'},
+  {id:'m_kb',      cl:'core', name:'Knowledge base',           desc:'Everything lands in one organised, searchable place, along with existing docs you import.', imp:'Organising has to happen automatically. Nobody maintains folders by hand.'},
+  {id:'m_pages',   cl:'core', name:'Shareable pages',          desc:'Guides published with your brand, ready for a team, a reviewer or a client.', imp:'Guides shared outside the company also spread the product.'},
+  {id:'m_current', cl:'core', name:'Kept up to date',          desc:'Knowledge that keeps being updated, instead of documents that quietly go stale.', imp:'Staying current is the hardest part of any knowledge tool, and it decides whether people trust it.'},
+  {id:'u_search',  cl:'core', name:'AI search',                desc:'People ask in plain words and land on the exact step.', imp:'Answers should jump to the exact step or moment, not just the right document.'},
+  {id:'u_bot',     cl:'core', name:'AI assistant',             desc:"A chat assistant that answers from the team's own videos and guides.", imp:'Every answer should show its source, so people can trust it.'},
+  {id:'u_mcp',     cl:'core', name:'Feeds AI agents (MCP)', agent:true, desc:"Through MCP, AI tools like Claude and ChatGPT can answer from a team's Trupeer knowledge, citing the source and timestamp.", imp:'Being where AI agents look for context is a new way to become essential.'},
+  {id:'p_new',    cl:'consumers', name:'New joiners',          desc:'Learn the real process from day one, instead of waiting for someone to show them.', imp:'Group guides into a first-week path for each role.'},
+  {id:'p_sales',  cl:'consumers', name:'Sales team',           desc:"Consistent demos and answers, in the customer's language.", imp:'Sales needs guides they can safely share with customers.'},
+  {id:'p_eng',    cl:'consumers', name:'Engineers',            desc:'Runbooks and tool how-tos, without another meeting.', imp:'Guides should be easy to reach from the tools engineers already use.'},
+  {id:'p_cs',     cl:'consumers', name:'Customer success',     desc:'Guides customers can follow on their own.', imp:'Customer-facing guides need branding and quick updates.'},
+  {id:'p_mgr',    cl:'consumers', name:'Managers reviewing handovers', desc:'A clear, professional handover instead of a rough recording.', imp:"Managers need to see what has been handed over, and what's still missing."},
+  {id:'p_agents', cl:'consumers', name:'AI agents', agent:true, desc:"Only as good as the context they get. Here they get the company's real workflows.", imp:'Agents need structure even more than people do: clear steps, sources and dates.'},
+  {id:'uc_kt',     cl:'usecases', name:'Handovers',            desc:"Capture a role's know-how before someone moves on.", imp:'Link handovers to HR moments like resignations and role changes.'},
+  {id:'uc_sop',    cl:'usecases', name:'Guides for new tools', desc:'Record the new process once, and everyone gets the same guide.', imp:'Rollout owners will want to see who has watched the guide.'},
+  {id:'uc_train',  cl:'usecases', name:'Training',             desc:'Training videos and guides that grow with the team.', imp:'Training needs order: learning paths, quick checks and refreshers.'},
+  {id:'uc_change', cl:'usecases', name:'Process changes',      desc:'Roll out a new way of working with guides people actually follow.', imp:'When a process changes, the old guide must be replaced everywhere at once.'},
+  {id:'uc_sales',  cl:'usecases', name:'Sales demos',          desc:'Product walkthroughs and pitch material for every rep.', imp:'Demos have to stay current when the product changes.'},
+  {id:'uc_cs',     cl:'usecases', name:'Customer help guides', desc:'Help articles and onboarding guides for customers.', imp:'Publishing to a help centre should take one step.'},
+  {id:'uc_pmm',    cl:'usecases', name:'Product videos',       desc:'Polished demos and release videos without a studio.', imp:'Speed wins: launch videos should be ready on launch day.'},
+  {id:'s_ent',      cl:'segments', name:'Large enterprises',         desc:'Including Fortune 100 companies, according to Trupeer.', imp:'Expect security reviews, single sign-on and admin controls before a wide rollout.'},
+  {id:'s_saas',     cl:'segments', name:'SaaS companies',            desc:'Their products change fast, so demos, docs and training must keep up.', imp:'Updating guides after each release has to be quick.'},
+  {id:'s_gcc',      cl:'segments', name:'Global capability centres', desc:'Large in-house delivery centres of global companies, running on process knowledge.', imp:'Big teams and frequent handovers make capture a daily need, not a one-off project.'},
+  {id:'s_services', cl:'segments', name:'Services firms',            desc:'Delivery-heavy teams where handovers happen often.', imp:'Client work means guides may need to stay separate for each client.'},
+  {id:'o_stays',   cl:'outcomes', name:'Knowledge stays',               desc:'When people leave, what they know stays with the company.', imp:"Show leaders which key processes are covered and which aren't."},
+  {id:'o_onboard', cl:'outcomes', name:'Faster onboarding',             desc:'New people get productive from real, up-to-date guides.', imp:'Time to productivity is a number buyers understand.'},
+  {id:'o_ai',      cl:'outcomes', name:'AI gets real context',          desc:"AI agents work from the company's real workflows. Trupeer cites Gartner: by the end of 2026, 60% of AI projects will be dropped because the data and knowledge behind them aren't ready.", imp:'Being ready for AI could become a reason to buy on its own.'},
+  {id:'o_quality', cl:'outcomes', name:'Polished by default',           desc:'Every guide looks professional, so people stop avoiding documentation.', imp:'When quality is automatic, more people create guides, and the library grows.'},
+  {id:'o_lang',    cl:'outcomes', name:'Every language, one recording', desc:'120+ languages from a single recording.', imp:'Global teams get the same knowledge at the same time.'}
+];
+const KIND_MODE = {risk:'both',block:'both',patch:'without',gap:'without',answer:'with',capture:'with',core:'with',deliver:'with',use:'both',seg:'both',out:'with'};
+const EDGE_LIST = [
+  ['src_head','risk_resign','risk'],['src_head','risk_promo','risk'],['src_head','risk_role','risk'],['src_tribal','risk_resign','risk'],['src_tribal','risk_change','risk'],['src_screen','risk_tools','risk'],['src_screen','risk_role','risk'],['src_docs','risk_change','risk'],
+  ['src_head','bar_creator','block'],['src_head','bar_urgent','block'],['src_tribal','bar_urgent','block'],['src_tribal','bar_present','block'],['src_screen','bar_format','block'],['src_docs','bar_tools','block'],
+  ['bar_tools','sq_record','patch'],['bar_tools','sq_wiki','patch'],['bar_tools','sq_bot','patch'],['src_screen','sq_record','patch'],['sq_bot','p_new','patch'],['sq_wiki','p_eng','patch'],
+  ['sq_record','sq_wiki','gap'],['sq_wiki','sq_bot','gap'],
+  ['bar_urgent','c_record','answer'],['bar_creator','c_record','answer'],['bar_present','c_polish','answer'],['bar_present','c_voice','answer'],['bar_format','c_sop','answer'],['bar_tools','core_trupeer','answer'],
+  ['src_head','c_record','capture'],['src_tribal','c_record','capture'],['src_screen','c_record','capture'],['src_docs','m_kb','capture'],['risk_resign','c_record','capture'],['risk_tools','c_sop','capture'],
+  ['core_trupeer','c_record','core'],['core_trupeer','m_kb','core'],['core_trupeer','u_mcp','core'],['c_sop','m_kb','core'],['c_voice','m_pages','core'],['m_kb','u_search','core'],['m_kb','u_bot','core'],['m_current','u_mcp','core'],
+  ['u_search','p_new','deliver'],['u_search','p_eng','deliver'],['u_search','p_cs','deliver'],['u_bot','p_sales','deliver'],['u_bot','p_new','deliver'],['u_mcp','p_agents','deliver'],['m_pages','p_mgr','deliver'],['m_pages','p_cs','deliver'],
+  ['p_new','uc_train','use'],['p_mgr','uc_kt','use'],['p_eng','uc_sop','use'],['p_sales','uc_sales','use'],['p_cs','uc_cs','use'],['p_sales','uc_pmm','use'],['p_eng','uc_change','use'],
+  ['s_gcc','uc_kt','seg'],['s_gcc','uc_sop','seg'],['s_gcc','uc_train','seg'],['s_services','uc_kt','seg'],['s_services','uc_sop','seg'],['s_saas','uc_pmm','seg'],['s_saas','uc_sales','seg'],['s_saas','uc_cs','seg'],['s_ent','uc_change','seg'],['s_ent','uc_train','seg'],
+  ['uc_kt','o_stays','out'],['risk_resign','o_stays','out'],['uc_train','o_onboard','out'],['p_new','o_onboard','out'],['p_agents','o_ai','out'],['u_mcp','o_ai','out'],['c_polish','o_quality','out'],['m_pages','o_quality','out'],['c_voice','o_lang','out']
+];
+const CHAPTERS = [
+  {focus:['sources'], mode:'without', title:"Most company knowledge lives in people's heads", body:'How a client account really works. The shortcut nobody wrote down. The steps someone clicks through every day. Most of it was never documented.', imp:'Capture has to start from the work itself, like a screen recording, not from a blank page.'},
+  {focus:['risks'], mode:'without', leak:true, title:'It gets lost when people move on', body:'People resign, get promoted or change roles. Teams reorganise. Each time, what they knew goes with them. The red dots are knowledge that never reaches anyone.', imp:"Capturing a handover must be quick enough to finish in someone's last week."},
+  {focus:['barriers'], mode:'without', title:'Five reasons nobody writes it down', body:"It's never urgent. Experts aren't writers. Formatting takes hours. It has to look professional if others will see it. And it takes too many tools.", imp:'Each reason is a product requirement: no extra effort, no special skills, polished by default, one tool.'},
+  {focus:['status'], mode:'without', title:"Today's tools leave gaps", body:'Teams record in one tool, write in a wiki, and search somewhere else. Knowledge drops out at every hand-off.', imp:'Owning the whole journey, from recording to answering a question, beats being one more tool.'},
+  {focus:['core','barriers'], mode:'with', only:['bar_urgent','bar_creator','bar_present','bar_format','bar_tools','c_record','c_polish','c_voice','c_sop','core_trupeer'], cam:{target:[-3.4,0.3,-0.7], half:5.7, theta:-0.36, phi:1.34}, camP:{target:[-4.4,0.4,-0.8], half:6.0, theta:-0.38, phi:1.3}, title:'Switch on Trupeer: each reason gets a fix', body:'Just record your screen. AI cleans it up, adds a voice, and writes the step-by-step guide. Follow the teal lines from each reason to its fix.', imp:'The first result must look finished, so people trust it enough to share it.'},
+  {focus:['core'], mode:'with', cam:{target:[0,0,0], half:3.9, theta:-0.55, phi:0.86}, camP:{target:[0,0,0], half:3.9, theta:-0.55, phi:0.82}, title:'Inside Trupeer: create, store, answer', body:"One recording becomes a video and a written guide. It's stored in a knowledge base that stays up to date. People get answers through AI search, an assistant, or their own AI tools.", imp:'Keeping guides up to date matters as much as creating them. Old guides lose trust.'},
+  {focus:['consumers'], mode:'with', title:'Who uses it: people, and now AI agents', body:'New joiners, sales, engineers, customer success, and managers reviewing handovers. AI agents too: through MCP, tools like Claude and ChatGPT can answer from the same guides.', imp:'Knowledge now has two readers, people and AI agents, and both need clear steps and sources.'},
+  {focus:['usecases','segments'], camFocus:['usecases'], labels:['uc_kt','uc_sop','uc_train','uc_change','uc_sales','uc_cs','uc_pmm'], mode:'with', title:"Where it's used, and for whom", body:"Handovers, guides for new tools, training, process changes, sales demos and customer help. It's built for large enterprises, SaaS companies, global capability centres and services firms.", imp:'Large companies will expect security reviews, single sign-on and admin controls before rolling it out widely.'},
+  {focus:['outcomes'], mode:'with', final:true, title:'What changes', body:'Knowledge stays when people leave. New people get up to speed faster. And AI agents finally work from real company knowledge.', imp:'Prove the value with numbers: key processes covered, guides used, and time for new people to get productive.'}
+];
+const SOURCES = [
+  ['Trupeer: Raghu Subramanian joins as President and CBO (18 June 2026)','https://www.trupeer.ai/announcements/raghu-joins-trupeer'],
+  ['Trupeer: Introducing Trupeer MCP','https://www.trupeer.ai/announcements/introducing-trupeer-mcp'],
+  ['Trupeer: knowledge base feature','https://www.trupeer.ai/knowledge-base'],
+  ['Trupeer: use cases','https://www.trupeer.ai/usecases'],
+  ['HeyGen: Trupeer integration','https://www.heygen.com/en-gb/integrations/trupeer']
+];
+const ZONES = [{name:'The problem', p:[-9.6, 0.4, 0]}, {name:'The impact', p:[9.9, 0.6, 0]}];
+const N = {}; NODES.forEach(n => { N[n.id] = n; n.edges = []; });
+const CL = {}; CLUSTERS.forEach(c => { CL[c.id] = c; c.nodes = []; });
+NODES.forEach(n => CL[n.cl].nodes.push(n));
+const EDGES = EDGE_LIST.map(([a,b,kind]) => { const e = {a, b, kind, modes:KIND_MODE[kind]}; N[a].edges.push(e); N[b].edges.push(e); return e; });
+const other = (e, id) => e.a === id ? e.b : e.a;
+
+/* ---------------- list view (works without WebGL) ---------------- */
+function buildList(){
+  const out = ['<div class="wrap"><div class="lhead"><h2>Where company knowledge goes</h2><button class="secondary" type="button" data-act="back3d">Back to 3D</button></div><p class="muted">The same map as text. It reads in three parts: the problem, what Trupeer does, and the impact.</p>'];
+  CLUSTERS.forEach(c => {
+    out.push('<section style="--c:var(--c-' + c.id + ')"><h3>' + esc(c.name) + '</h3><p class="muted">' + esc(c.blurb) + '</p><p class="impl"><b>Product implication:</b> ' + esc(c.imp) + '</p><ul>');
+    c.nodes.forEach(n => out.push('<li><strong>' + esc(n.name) + '.</strong> ' + esc(n.desc) + (n.fix ? '<span class="ansl">How Trupeer solves it: ' + esc(n.fix) + '</span>' : '') + '<span class="impl2">Product implication: ' + esc(n.imp) + '</span></li>'));
+    out.push('</ul></section>');
+  });
+  out.push('<section><h3>Why I made this</h3><p>I made this after talking with the Trupeer team. I have seen this problem up close: before the QA agents I built at work could test anything, I had to interview QA leads to write down 65 activities that only existed in their heads. This map is that same problem, at company scale.</p><p class="muted">The product implications are my own reading of what each problem means for the product. Everything about Trupeer itself comes from its public pages and announcements.</p><p class="muted">Chetan, October 2026</p></section>');
+  out.push('<section><h3>Sources</h3><ul>' + SOURCES.map(s => '<li><a href="' + s[1] + '" target="_blank" rel="noopener">' + esc(s[0]) + '</a></li>').join('') + '<li>A conversation with the Trupeer team</li></ul></section></div>');
+  listEl.innerHTML = out.join('');
+}
+buildList();
+
+const state = {view:'intro', mode:'without', chapter:0, focus:null, sel:null, hover:null, fromStory:null, only:null, labels:null};
+let api = null; // set by 3D init
+
+function openList(){ listEl.hidden = false; listEl.scrollTop = 0; }
+function closeList(){ listEl.hidden = true; }
+$('#btnList').addEventListener('click', openList);
+listEl.addEventListener('click', e => { const b = e.target.closest('[data-act="back3d"]'); if (b) closeList(); });
+
+const glOK = !!window.THREE && (() => { try { const c = document.createElement('canvas'); return !!(c.getContext('webgl2') || c.getContext('webgl')); } catch (err) { return false; } })();
+if (!glOK) { intro.hidden = true; $('#nogl').hidden = false; $('.mode').hidden = true; openList(); return; }
+
+/* ---------------- 3D ---------------- */
+const V3 = THREE.Vector3;
+const canvas = $('#gl');
+let renderer;
+try { renderer = new THREE.WebGLRenderer({canvas, antialias:true, alpha:true, powerPreference:'high-performance'}); }
+catch (err) { intro.hidden = true; $('#nogl').hidden = false; $('.mode').hidden = true; openList(); return; }
+renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+renderer.setClearColor(0x000000, 0);
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(48, 1, 0.1, 400);
+scene.fog = new THREE.Fog(0x000000, 20, 80);
+scene.add(new THREE.AmbientLight(0xffffff, 0.78));
+const sun = new THREE.DirectionalLight(0xffffff, 0.6); sun.position.set(6, 10, 12); scene.add(sun);
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+let seed = 7; const rnd = () => { seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646; };
+const rr = (a, b) => a + (b - a) * rnd();
+
+CLUSTERS.forEach(c => { c.center = new V3(c.c[0], c.c[1], c.c[2]); });
+// node positions inside clusters: flattened Fibonacci lens facing outward
+function fib(i, n){ const y = 1 - (i + 0.5) / n * 2, r = Math.sqrt(Math.max(0, 1 - y * y)), th = i * 2.399963229728653; return new V3(Math.cos(th) * r, y, Math.sin(th) * r); }
+CLUSTERS.forEach(c => {
+  if (c.id === 'core') return;
+  const u = c.center.clone().normalize();
+  c.nodes.forEach((nd, i) => { const p = fib(i, c.nodes.length).multiplyScalar(c.r); p.addScaledVector(u, -p.dot(u) * 0.55); nd.pos = c.center.clone().add(p); });
+});
+// core rings
+const RINGS = [
+  {name:'Create',  R:2.05, e:[1.18, 0.32, 0.12], ids:['c_record','c_polish','c_voice','c_sop']},
+  {name:'Manage',  R:2.8,  e:[1.95,-0.62, 0.28], ids:['m_kb','m_pages','m_current']},
+  {name:'Consume', R:3.5, e:[1.38, 0.98,-0.46], ids:['u_search','u_bot','u_mcp']}
+];
+RINGS.forEach(r => { r.q = new THREE.Quaternion().setFromEuler(new THREE.Euler(r.e[0], r.e[1], r.e[2])); });
+function ringPoint(ri, ang, t){ const r = RINGS[ri]; return (t || new V3()).set(Math.cos(ang) * r.R, Math.sin(ang) * r.R, 0).applyQuaternion(r.q); }
+N.core_trupeer.pos = new V3(0, 0, 0);
+RINGS.forEach((r, ri) => {
+  const items = r.ids.map(id => {
+    const nd = N[id]; const d = new V3();
+    nd.edges.forEach(e => { const o = N[other(e, id)]; if (o.cl !== 'core') d.add(o.pos); });
+    if (d.lengthSq() < 1e-6) d.set(0, 0, 1); d.normalize();
+    let best = -9, ba = 0; const tv = new V3();
+    for (let k = 0; k < 360; k++) { const a = k / 360 * Math.PI * 2; const v = ringPoint(ri, a, tv).normalize().dot(d); if (v > best) { best = v; ba = a; } }
+    return {nd, ang:ba};
+  });
+  const minSep = Math.PI * 2 / (items.length * 1.45), TAU = Math.PI * 2;
+  for (let it = 0; it < 80; it++) {
+    items.sort((x, y) => x.ang - y.ang);
+    for (let i = 0; i < items.length; i++) {
+      const A = items[i], B = items[(i + 1) % items.length];
+      let gap = B.ang - A.ang; if (i === items.length - 1) gap += TAU;
+      if (gap < minSep) { const p = (minSep - gap) / 2; A.ang -= p; B.ang += p; }
+    }
+    items.forEach(x => { x.ang = ((x.ang % TAU) + TAU) % TAU; });
+  }
+  items.forEach(x => { x.nd.ring = ri; x.nd.ang = x.ang; x.nd.pos = ringPoint(ri, x.ang); });
+  // ring label sits in the widest gap
+  items.sort((x, y) => x.ang - y.ang); let bg = -1, la = 0;
+  for (let i = 0; i < items.length; i++) { const A = items[i], B = items[(i + 1) % items.length]; let g = B.ang - A.ang; if (i === items.length - 1) g += TAU; if (g > bg) { bg = g; la = A.ang + g / 2; } }
+  r.labelPos = ringPoint(ri, la).multiplyScalar(1.0);
+});
+
+/* curves */
+function bez(a, b){
+  const mid = a.clone().add(b).multiplyScalar(0.5), len = a.distanceTo(b);
+  const out = mid.length() < 0.8 ? new V3(0, 0, 1) : mid.clone().normalize();
+  return new THREE.QuadraticBezierCurve3(a.clone(), mid.clone().addScaledVector(out, len * 0.16), b.clone());
+}
+class Rev extends THREE.Curve { constructor(c){ super(); this.c = c; } getPoint(t, o){ return this.c.getPoint(1 - t, o || new V3()); } }
+class Sub extends THREE.Curve { constructor(c, t0, t1){ super(); this.c = c; this.t0 = t0; this.t1 = t1; } getPoint(t, o){ return this.c.getPoint(this.t0 + (this.t1 - this.t0) * t, o || new V3()); } }
+class RingArc extends THREE.Curve { constructor(ri, a0, a1){ super(); this.ri = ri; this.a0 = a0; let d = a1 - a0; while (d <= 0) d += Math.PI * 2; this.d = d; } getPoint(t, o){ return ringPoint(this.ri, this.a0 + this.d * t, o || new V3()); } }
+class RingLoop extends THREE.Curve { constructor(ri, a0){ super(); this.ri = ri; this.a0 = a0; } getPoint(t, o){ return ringPoint(this.ri, this.a0 + Math.PI * 2 * t, o || new V3()); } }
+const curveMap = {};
+EDGES.forEach(e => { e.curve = bez(N[e.a].pos, N[e.b].pos); curveMap[e.a + '|' + e.b] = e.curve; });
+function segCurve(a, b){
+  const pa = typeof a === 'string' ? N[a].pos : a, pb = typeof b === 'string' ? N[b].pos : b;
+  if (typeof a === 'string' && typeof b === 'string') {
+    if (curveMap[a + '|' + b]) return curveMap[a + '|' + b];
+    if (curveMap[b + '|' + a]) return new Rev(curveMap[b + '|' + a]);
+    if (N[a].ring != null && N[a].ring === N[b].ring) return new RingArc(N[a].ring, N[a].ang, N[b].ang);
+  }
+  return bez(pa, pb);
+}
+
+/* textures + shared geometry */
+function glowTexture(){ const c = document.createElement('canvas'); c.width = c.height = 64; const g = c.getContext('2d'); const gr = g.createRadialGradient(32, 32, 0, 32, 32, 32); gr.addColorStop(0, 'rgba(255,255,255,1)'); gr.addColorStop(0.35, 'rgba(255,255,255,.35)'); gr.addColorStop(1, 'rgba(255,255,255,0)'); g.fillStyle = gr; g.fillRect(0, 0, 64, 64); return new THREE.CanvasTexture(c); }
+const glowTex = glowTexture();
+const sphereGeo = new THREE.SphereGeometry(1, 22, 16), octaGeo = new THREE.OctahedronGeometry(1.3, 0);
+const hitMat = new THREE.MeshBasicMaterial({visible:false});
+const hits = [];
+
+/* cluster bubbles (fresnel glass) */
+const fresVS = 'varying vec3 vN; varying vec3 vV; void main(){ vec4 mv = modelViewMatrix * vec4(position,1.0); vN = normalize(normalMatrix * normal); vV = normalize(-mv.xyz); gl_Position = projectionMatrix * mv; }';
+const fresFS = 'uniform vec3 uColor; uniform float uOpacity; uniform float uPow; varying vec3 vN; varying vec3 vV; void main(){ float f = pow(1.0 - abs(dot(vN, vV)), uPow); gl_FragColor = vec4(uColor, f * uOpacity); }';
+const bubbleGeo = new THREE.SphereGeometry(1, 44, 30);
+CLUSTERS.forEach(c => {
+  if (c.id === 'core') return;
+  const m = new THREE.ShaderMaterial({vertexShader:fresVS, fragmentShader:fresFS, transparent:true, depthWrite:false, uniforms:{uColor:{value:new THREE.Color()}, uOpacity:{value:0.5}, uPow:{value:2.4}}});
+  const mesh = new THREE.Mesh(bubbleGeo, m); mesh.position.copy(c.center); mesh.scale.setScalar(c.r + 0.5); mesh.renderOrder = -1; scene.add(mesh);
+  c.bubble = mesh; c.op = 0.5;
+});
+
+/* nodes */
+NODES.forEach(n => {
+  const isCore = n.id === 'core_trupeer';
+  const mat = new THREE.MeshLambertMaterial({color:0xffffff, transparent:true, opacity:1});
+  const m = new THREE.Mesh(n.agent ? octaGeo : sphereGeo, mat); m.position.copy(n.pos);
+  n.base = isCore ? 0.5 : 0.17; m.scale.setScalar(n.base); scene.add(m); n.mesh = m; n.op = 1; n.phase = rnd() * 6.28;
+  const hit = new THREE.Mesh(sphereGeo, hitMat); hit.position.copy(n.pos); hit.scale.setScalar(isCore ? 0.8 : 0.44); hit.userData.id = n.id; scene.add(hit); hits.push(hit);
+  const halo = new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex, transparent:true, depthWrite:false, opacity:0.5})); halo.position.copy(n.pos); halo.scale.setScalar(isCore ? 3.4 : 0.95); scene.add(halo); n.halo = halo;
+});
+
+/* core shell + rings */
+const shell = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.IcosahedronGeometry(0.95, 1)), new THREE.LineBasicMaterial({color:0xffffff, transparent:true, opacity:0.4}));
+scene.add(shell);
+RINGS.forEach(r => { const t = new THREE.Mesh(new THREE.TorusGeometry(r.R, 0.016, 6, 200), new THREE.MeshBasicMaterial({color:0xffffff, transparent:true, opacity:0.3, depthWrite:false})); t.quaternion.copy(r.q); scene.add(t); r.mesh = t; });
+
+/* edges (gradient tubes; dashed for hand-off gaps) */
+const TS = 30, RAD = 5;
+EDGES.forEach(e => {
+  const radius = e.kind === 'answer' ? 0.03 : (e.kind === 'seg' || e.kind === 'use' ? 0.015 : 0.02);
+  const mat = new THREE.MeshBasicMaterial({vertexColors:true, transparent:true, opacity:0, depthWrite:false});
+  e.mat = mat; e.op = 0; e.geos = [];
+  if (e.kind === 'gap') {
+    for (let k = 0; k < 7; k++) { const t0 = k / 7, g = new THREE.TubeGeometry(new Sub(e.curve, t0, t0 + 0.075), 4, 0.026, RAD, false); e.geos.push({g, segs:4}); scene.add(new THREE.Mesh(g, mat)); }
+  } else { const g = new THREE.TubeGeometry(e.curve, TS, radius, RAD, false); e.geos.push({g, segs:TS}); scene.add(new THREE.Mesh(g, mat)); }
+});
+
+/* background dust */
+const dustN = 260, dustGeo = new THREE.BufferGeometry(), dpos = new Float32Array(dustN * 3);
+for (let i = 0; i < dustN; i++) { const v = fib(i, dustN).multiplyScalar(rr(26, 48)); dpos[i * 3] = v.x; dpos[i * 3 + 1] = v.y; dpos[i * 3 + 2] = v.z; }
+dustGeo.setAttribute('position', new THREE.BufferAttribute(dpos, 3));
+
+/* particle shader */
+const pVS = 'attribute vec3 aColor; attribute float aAlpha; attribute float aSize; uniform float uPR; uniform float uScale; varying vec3 vC; varying float vA; void main(){ vec4 mv = modelViewMatrix * vec4(position,1.0); gl_Position = projectionMatrix * mv; gl_PointSize = aSize * uPR * (uScale / max(0.5, -mv.z)); vC = aColor; vA = aAlpha; }';
+const pFS = 'varying vec3 vC; varying float vA; void main(){ vec2 p = gl_PointCoord - 0.5; float d = length(p); if (d > 0.5) discard; float a = smoothstep(0.5, 0.0, d); gl_FragColor = vec4(vC, a * a * vA); }';
+function pointsMat(scale){ return new THREE.ShaderMaterial({vertexShader:pVS, fragmentShader:pFS, transparent:true, depthWrite:false, uniforms:{uPR:{value:renderer.getPixelRatio()}, uScale:{value:scale}}}); }
+const dustMat = pointsMat(60);
+dustGeo.setAttribute('aColor', new THREE.BufferAttribute(new Float32Array(dustN * 3), 3));
+dustGeo.setAttribute('aAlpha', new THREE.BufferAttribute(new Float32Array(dustN).fill(0.3), 1));
+const dsz = new Float32Array(dustN); for (let i = 0; i < dustN; i++) dsz[i] = rr(0.6, 1.6);
+dustGeo.setAttribute('aSize', new THREE.BufferAttribute(dsz, 1));
+const dust = new THREE.Points(dustGeo, dustMat); dust.frustumCulled = false; scene.add(dust);
+
+/* routes for knowledge sparks */
+const S = 160;
+function voidOf(id){ const p = N[id].pos; return p.clone().addScaledVector(p.clone().normalize(), rr(5.5, 7.5)).add(new V3(rr(-1.2, 1.2), rr(-1.4, 1.4), rr(-1.6, 1.6))); }
+function makeRoute(way, type, w){
+  const path = new THREE.CurvePath();
+  for (let i = 0; i < way.length - 1; i++) path.add(segCurve(way[i], way[i + 1]));
+  const pts = path.getSpacedPoints(S), pos = new Float32Array((S + 1) * 3);
+  pts.forEach((p, i) => { pos[i * 3] = p.x; pos[i * 3 + 1] = p.y; pos[i * 3 + 2] = p.z; });
+  const lens = path.getCurveLengths(), total = path.getLength();
+  const stops = way.map((wp, i) => { const t = i === 0 ? 0 : lens[i - 1] / total; let key; if (i === 0) key = 'spark'; else if (typeof wp !== 'string') key = 'lost'; else key = N[wp].cl; return [t, key]; });
+  return {pos, col:new Float32Array((S + 1) * 3), len:total, type, w, stops};
+}
+function makeLoop(ri, w){
+  const c = new RingLoop(ri, 0), pts = c.getSpacedPoints(S), pos = new Float32Array((S + 1) * 3);
+  pts.forEach((p, i) => { pos[i * 3] = p.x; pos[i * 3 + 1] = p.y; pos[i * 3 + 2] = p.z; });
+  return {pos, col:new Float32Array((S + 1) * 3), len:c.getLength(), type:'loop', w, stops:[[0, 'core'], [1, 'core']]};
+}
+const routesW = [], routesT = [], voidPts = [];
+EDGES.forEach(e => {
+  if (e.kind !== 'risk' && e.kind !== 'block') return;
+  for (let k = 0; k < 2; k++) { const vp = voidOf(e.b); if (e.kind === 'risk') voidPts.push(vp); routesW.push(makeRoute([e.a, e.b, vp], 'lost', 1)); }
+});
+routesW.push(makeRoute(['src_screen','sq_record','sq_wiki','sq_bot','p_new'], 'arrive', 3));
+routesW.push(makeRoute(['bar_tools','sq_wiki','p_eng'], 'arrive', 2.5));
+routesW.push(makeRoute(['src_screen','sq_record', voidOf('sq_record')], 'lost', 2.5));
+routesW.push(makeRoute(['bar_tools','sq_bot', voidOf('sq_bot')], 'lost', 2.5));
+[
+  ['src_head','c_record','c_sop','m_kb','u_search','p_new','uc_train','o_onboard'],
+  ['src_tribal','c_record','c_polish','c_voice','m_pages','p_mgr','uc_kt','o_stays'],
+  ['src_screen','c_record','c_sop','m_kb','u_bot','p_sales','uc_sales'],
+  ['src_docs','m_kb','u_search','p_eng','uc_sop'],
+  ['risk_resign','c_record','c_sop','m_kb','m_current','u_mcp','p_agents','o_ai'],
+  ['risk_tools','c_sop','m_kb','u_search','p_cs','uc_cs']
+].forEach(w => routesT.push(makeRoute(w, 'arrive', 1)));
+RINGS.forEach((r, ri) => routesT.push(makeLoop(ri, 0.75)));
+const voidCenter = voidPts.reduce((a, v) => a.add(v), new V3()).multiplyScalar(1 / Math.max(1, voidPts.length));
+const drain = new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex, transparent:true, depthWrite:false, opacity:0})); drain.position.copy(voidCenter); drain.scale.setScalar(7); scene.add(drain);
+
+function makePool(n, routes){
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.BufferAttribute(new Float32Array(n * 3), 3));
+  g.setAttribute('aColor', new THREE.BufferAttribute(new Float32Array(n * 3), 3));
+  g.setAttribute('aAlpha', new THREE.BufferAttribute(new Float32Array(n), 1));
+  g.setAttribute('aSize', new THREE.BufferAttribute(new Float32Array(n), 1));
+  const m = pointsMat(95), pts = new THREE.Points(g, m); pts.frustumCulled = false; scene.add(pts);
+  const P = {n, g, m, routes, ri:new Int16Array(n), t:new Float32Array(n), sp:new Float32Array(n), sz:new Float32Array(n), fade:0, target:0, cum:[], tot:0};
+  routes.forEach(r => { P.tot += r.w; P.cum.push(P.tot); });
+  for (let i = 0; i < n; i++) { P.ri[i] = pickRoute(P); P.t[i] = rnd(); P.sp[i] = rr(1.7, 2.7); P.sz[i] = rr(0.75, 1.35); }
+  return P;
+}
+function pickRoute(P){ const x = rnd() * P.tot; for (let i = 0; i < P.cum.length; i++) if (x <= P.cum[i]) return i; return P.cum.length - 1; }
+const poolW = makePool(240, routesW), poolT = makePool(330, routesT);
+poolW.target = poolW.fade = 1;
+
+/* ---------------- theme ---------------- */
+let TH = null;
+function isDark(){ const t = document.documentElement.getAttribute('data-theme'); if (t === 'dark') return true; if (t === 'light') return false; return window.matchMedia('(prefers-color-scheme: dark)').matches; }
+function readTheme(){
+  const cs = getComputedStyle(document.documentElement), g = k => cs.getPropertyValue(k).trim();
+  const t = {dark:isDark(), bg:new THREE.Color(g('--bg') || '#0D1220'), muted:new THREE.Color(g('--muted') || '#98A3BF'), spark:new THREE.Color(g('--spark') || '#FFE39A'), lost:new THREE.Color(g('--lost') || '#FF5A5A'), cl:{}};
+  CLUSTERS.forEach(c => { t.cl[c.id] = new THREE.Color(g('--c-' + c.id) || '#888888'); });
+  return t;
+}
+const colorKey = k => k === 'spark' ? TH.spark : k === 'lost' ? TH.lost : TH.cl[k];
+function paintRoute(r){
+  for (let i = 0; i <= S; i++) {
+    const t = i / S; let k = 0; while (k < r.stops.length - 2 && t > r.stops[k + 1][0]) k++;
+    const a = r.stops[k], b = r.stops[Math.min(k + 1, r.stops.length - 1)];
+    const u = b[0] > a[0] ? clamp((t - a[0]) / (b[0] - a[0]), 0, 1) : 0;
+    const A = colorKey(a[1]), B = colorKey(b[1]);
+    r.col[i * 3] = A.r + (B.r - A.r) * u; r.col[i * 3 + 1] = A.g + (B.g - A.g) * u; r.col[i * 3 + 2] = A.b + (B.b - A.b) * u;
+  }
+}
+function paintEdge(e){
+  let ca = TH.cl[N[e.a].cl], cb = TH.cl[N[e.b].cl];
+  if (e.kind === 'answer') { ca = cb = TH.cl.core; }
+  if (e.kind === 'patch' || e.kind === 'gap') { ca = cb = TH.cl.status; }
+  e.geos.forEach(({g, segs}) => {
+    const n = g.attributes.position.count; let col = g.attributes.color;
+    if (!col) { col = new THREE.BufferAttribute(new Float32Array(n * 3), 3); g.setAttribute('color', col); }
+    for (let i = 0; i < n; i++) { const t = Math.floor(i / (RAD + 1)) / segs; col.setXYZ(i, ca.r + (cb.r - ca.r) * t, ca.g + (cb.g - ca.g) * t, ca.b + (cb.b - ca.b) * t); }
+    col.needsUpdate = true;
+  });
+}
+function applyTheme(){
+  TH = readTheme(); const dark = TH.dark, blend = dark ? THREE.AdditiveBlending : THREE.NormalBlending;
+  scene.fog.color.copy(TH.bg);
+  NODES.forEach(n => { n.col = TH.cl[n.cl].clone(); n.mesh.material.color.copy(n.col); n.mesh.material.emissive.copy(n.col).multiplyScalar(dark ? 0.42 : 0.06); n.halo.material.color.copy(n.col); n.halo.material.blending = blend; n.halo.material.needsUpdate = true; });
+  CLUSTERS.forEach(c => { if (!c.bubble) return; c.bubble.material.uniforms.uColor.value.copy(TH.cl[c.id]); c.bubble.material.blending = blend; c.bubble.material.uniforms.uPow.value = dark ? 2.4 : 2.0; c.bubble.material.needsUpdate = true; });
+  EDGES.forEach(e => { paintEdge(e); e.mat.blending = blend; e.mat.needsUpdate = true; });
+  shell.material.color.copy(TH.cl.core); RINGS.forEach(r => r.mesh.material.color.copy(TH.cl.core));
+  drain.material.color.copy(TH.lost); drain.material.blending = blend; drain.material.needsUpdate = true;
+  routesW.forEach(paintRoute); routesT.forEach(paintRoute);
+  [poolW, poolT].forEach(P => { P.m.blending = blend; P.m.needsUpdate = true; });
+  dustMat.blending = blend; dustMat.needsUpdate = true;
+  const dc = dustGeo.attributes.aColor; for (let i = 0; i < dustN; i++) dc.setXYZ(i, TH.muted.r, TH.muted.g, TH.muted.b); dc.needsUpdate = true;
+  dustGeo.attributes.aAlpha.array.fill(dark ? 0.32 : 0.22); dustGeo.attributes.aAlpha.needsUpdate = true;
+}
+applyTheme();
+const mq = window.matchMedia('(prefers-color-scheme: dark)');
+if (mq.addEventListener) mq.addEventListener('change', applyTheme); else if (mq.addListener) mq.addListener(applyTheme);
+new MutationObserver(applyTheme).observe(document.documentElement, {attributes:true, attributeFilter:['data-theme']});
+
+/* ---------------- labels ---------------- */
+const LABELS = [];
+function addLabel(cls, html, pos, vis, styleC){ const el = document.createElement('div'); el.className = 'lbl ' + cls; el.innerHTML = '<span>' + html + '</span>'; if (styleC) el.style.setProperty('--c', 'var(--c-' + styleC + ')'); labelsEl.appendChild(el); const L = {el, pos, vis, on:false, dim:false}; LABELS.push(L); return L; }
+let focusSet = null, adjSel = new Set(), modeT = 0;
+NODES.forEach(n => {
+  if (n.id === 'core_trupeer') { n.label = addLabel('core-l', 'Trupeer', n.pos.clone().add(new V3(0, 0.72, 0)), () => state.view !== 'intro' && (!state.sel || state.sel === n.id || adjSel.has(n.id))); n.label.el.querySelector('span').style.transform = 'translate(-50%,-50%)'; return; }
+  n.label = addLabel('', esc(n.name), n.pos, () => {
+    if (state.view === 'intro') return false;
+    if (state.sel) return n.id === state.sel || adjSel.has(n.id);
+    if (state.hover === n.id) return true;
+    if (state.labels) return state.labels.has(n.id);
+    if (state.only) return state.only.has(n.id);
+    if (focusSet && focusSet.has(n.cl)) return n.cl !== 'core' || modeT > 0.5;
+    return false;
+  });
+});
+NODES.forEach(n => { if (n.id !== 'core_trupeer') n.label.node = n.id; n.label.tapNode = n.id; n.label.el.classList.add('tap'); });
+CLUSTERS.forEach(c => { if (c.id === 'core') return; c.label = addLabel('clbl', '<i></i>' + esc(c.name), c.center.clone().add(new V3(0, c.r + 0.75, 0)), () => state.view !== 'intro' && !(state.view === 'story' && focusSet && !focusSet.has(c.id)), c.id); c.label.alt = c.center.clone().add(new V3(0, -(c.r + 0.75), 0)); c.label.tapCluster = c.id; c.label.el.classList.add('tap'); });
+labelsEl.addEventListener('click', e => { const el = e.target.closest('.lbl'); if (!el) return; const L = LABELS.find(x => x.el === el); if (!L) return; if (L.tapNode) focusNode(N[L.tapNode]); else if (L.tapCluster) focusCluster(L.tapCluster); });
+RINGS.forEach(r => { r.label = addLabel('rlbl', esc(r.name), r.labelPos, () => state.view !== 'intro' && modeT > 0.5 && !state.sel && !state.only && (!focusSet || focusSet.has('core'))); });
+const zoneLabels = ZONES.map(z => addLabel('zlbl', esc(z.name), new V3(z.p[0], z.p[1], z.p[2]), () => state.view === 'explore' && !state.sel && !focusSet));
+const voidLabel = addLabel('vlbl', 'Lost when people leave', voidCenter, () => state.view !== 'intro' && modeT < 0.5 && !state.sel && (!focusSet || focusSet.has('risks') || focusSet.has('barriers')));
+const pv = new V3(), placed = [], nodeLs = [];
+const overlapArea = (r, W, H) => { let a = 0; for (const q of placed) { const ix = Math.min(r.x + r.w, q.x + q.w) - Math.max(r.x, q.x), iy = Math.min(r.y + r.h, q.y + q.h) - Math.max(r.y, q.y); if (ix > 0 && iy > 0) a += ix * iy; }
+  if (r.x < 4) a += (4 - r.x) * r.h * 3; if (r.x + r.w > W - 4) a += (r.x + r.w - W + 4) * r.h * 3; if (r.y < 4) a += (4 - r.y) * r.w * 3; if (r.y + r.h > H - 4) a += (r.y + r.h - H + 4) * r.w * 3; return a; };
+const uiRect = el => { if (!el || el.hidden) return null; const b = el.getBoundingClientRect(), ab = app.getBoundingClientRect(); if (!b.width) return null; return {x:b.left - ab.left - 4, y:b.top - ab.top - 4, w:b.width + 8, h:b.height + 8}; };
+const modeEl = $('.mode'), listBtn = $('#btnList');
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => LABELS.forEach(L => { L.w = undefined; }));
+function updateLabels(){
+  const W = app.clientWidth, H = app.clientHeight; camera.updateMatrixWorld();
+  placed.length = 0; nodeLs.length = 0;
+  [zoomEl, sheet, modeEl, listBtn].forEach(el => { const r = uiRect(el); if (r) placed.push(r); });
+  for (const L of LABELS) {
+    const show = L.vis();
+    pv.copy(L.pos).project(camera);
+    const inView = pv.z < 1 && pv.z > -1;
+    L.x = (pv.x * 0.5 + 0.5) * W; L.y = (-pv.y * 0.5 + 0.5) * H; L.z = pv.z;
+    if (L.alt && L.y < (W >= 900 ? 80 : 104)) { pv.copy(L.alt).project(camera); L.x = (pv.x * 0.5 + 0.5) * W; L.y = (-pv.y * 0.5 + 0.5) * H; L.z = pv.z; }
+    if (!L.node && L.w) L.x = clamp(L.x, L.w / 2 + 6, W - L.w / 2 - (W >= 900 ? 70 : 58));
+    if (L.alt && L.w && show) {
+      const a1 = overlapArea({x:L.x - L.w / 2, y:L.y - L.h / 2, w:L.w, h:L.h}, W, H);
+      if (a1 > 0) { pv.copy(L.alt).project(camera); const ax = clamp((pv.x * 0.5 + 0.5) * W, L.w / 2 + 6, W - L.w / 2 - (W >= 900 ? 70 : 58)), ay = (-pv.y * 0.5 + 0.5) * H;
+        if (overlapArea({x:ax - L.w / 2, y:ay - L.h / 2, w:L.w, h:L.h}, W, H) < a1) { L.x = ax; L.y = ay; L.z = pv.z; } }
+    }
+    L.el.style.transform = 'translate3d(' + L.x.toFixed(1) + 'px,' + L.y.toFixed(1) + 'px,0)';
+    L.el.style.zIndex = String(2000 - Math.round(pv.z * 1000));
+    const on = show && inView; if (on !== L.on) { L.el.classList.toggle('on', on); L.on = on; }
+    if (on) {
+      if (L.w === undefined) { const sp = L.el.firstChild; L.w = sp.offsetWidth || 80; L.h = sp.offsetHeight || 20; }
+      if (L.node) nodeLs.push(L); else placed.push({x:L.x - L.w / 2, y:L.y - L.h / 2, w:L.w, h:L.h});
+    }
+  }
+  nodeLs.sort((a, b) => (b.node === state.sel) - (a.node === state.sel) || a.z - b.z);
+  for (const L of nodeLs) {
+    const h = L.h, w = L.w, cands = [[0, -(h + 11)], [0, 11], [w / 2 + 13, -h / 2], [-(w / 2 + 13), -h / 2], [0, -(2 * h + 15)], [0, h + 15], [w / 2 + 13, -h * 1.6], [-(w / 2 + 13), h * 0.6], [w / 2 + 13, h * 0.9], [-(w / 2 + 13), -h * 1.7], [0, -(4 * h + 23)], [0, 3 * h + 23]];
+    let cx = 0, cy = cands[0][1], best = Infinity;
+    for (const c of cands) { const r = {x:L.x + c[0] - w / 2 - 2, y:L.y + c[1] - 1, w:w + 4, h:h + 2}; const a = overlapArea(r, W, H); if (a < best) { best = a; cx = c[0]; cy = c[1]; if (a === 0) break; } }
+    placed.push({x:L.x + cx - w / 2 - 2, y:L.y + cy - 1, w:w + 4, h:h + 2});
+    const key = cx + ',' + cy; if (L.dy !== key) { L.el.firstChild.style.transform = 'translate(calc(-50% + ' + cx + 'px),' + cy + 'px)'; L.dy = key; }
+  }
+  CLUSTERS.forEach(c => { if (!c.label) return; const d = !!(focusSet && !focusSet.has(c.id)) || !!state.sel; if (d !== c.label.dim) { c.label.el.classList.toggle('dim', d); c.label.dim = d; } });
+  NODES.forEach(n => { const s = state.sel === n.id; if (s !== !!n.label.isSel) { n.label.el.classList.toggle('sel', s); n.label.isSel = s; } });
+  const cd = modeT < 0.5 && !state.sel; const cl = N.core_trupeer.label; if (cd !== !!cl.dim) { cl.el.classList.toggle('dim', cd); cl.dim = cd; }
+}
+
+/* ---------------- camera + controls ---------------- */
+const ctl = {target:new V3(0, 0.2, 0), theta:0.55, phi:1.2, radius:34, vt:0, vp:0, anim:null};
+const ptrs = new Map(); let pinchD = 0, downAt = null, moved = 0, lastInteract = 0;
+function applyCam(){ const sp = Math.sin(ctl.phi); camera.position.set(ctl.target.x + ctl.radius * sp * Math.sin(ctl.theta), ctl.target.y + ctl.radius * Math.cos(ctl.phi), ctl.target.z + ctl.radius * sp * Math.cos(ctl.theta)); camera.lookAt(ctl.target); }
+function visRect(){
+  const W = app.clientWidth, H = app.clientHeight, desk = W >= 900, sh = !sheet.hidden;
+  const top = desk ? 72 : 100, bot = sh ? sheet.offsetHeight + (desk ? 16 : 0) : 0;
+  return {W, H, top, bot, right:0, w:W, h:Math.max(120, H - top - bot)};
+}
+function layout(){
+  const W = app.clientWidth, H = app.clientHeight; renderer.setSize(W, H, false);
+  camera.aspect = W / H; const r = visRect();
+  camera.setViewOffset(W, H, r.right / 2, (r.bot - r.top) / 2, W, H); camera.updateProjectionMatrix();
+  [poolW, poolT].forEach(P => { P.m.uniforms.uPR.value = renderer.getPixelRatio(); }); dustMat.uniforms.uPR.value = renderer.getPixelRatio();
+  zoomEl.style.top = (r.top + r.h / 2).toFixed(0) + 'px';
+}
+function fit(half){ const r = visRect(), tv = Math.tan(camera.fov * Math.PI / 360), asp = Math.max(0.35, r.w / Math.max(120, r.h)); const hFrac = r.h / r.H; return Math.max(half / (tv * hFrac), half / (tv * asp * hFrac)) * 1.04; }
+function presetFor(ids, cam){
+  if (cam) return {target:new V3(cam.target[0], cam.target[1], cam.target[2]), theta:cam.theta, phi:cam.phi, radius:fit(cam.half)};
+  const c = new V3(); ids.forEach(id => c.add(CL[id].center)); c.multiplyScalar(1 / ids.length);
+  const target = c.clone().multiplyScalar(0.8); let half = 0;
+  ids.forEach(id => { half = Math.max(half, CL[id].center.distanceTo(target) + CL[id].r + 0.9); });
+  const out = c.lengthSq() < 0.01 ? new V3(0, 0, 1) : c.clone().normalize();
+  const dir = out.multiplyScalar(0.62).add(new V3(0, 0.15, 1)).normalize();
+  return {target, theta:Math.atan2(dir.x, dir.z), phi:Math.acos(clamp(dir.y, -0.9, 0.9)), radius:fit(half)};
+}
+function presetOverview(){ const r = visRect(), portrait = r.w / r.h < 0.85; return {target:new V3(0, 0.1, 0), theta:portrait ? 0.78 : 0.38, phi:1.24, radius:clamp(fit(portrait ? 7.3 : 8.9), 14, 46)}; }
+function presetLeak(){ const rc = CL.risks.center, target = rc.clone().lerp(voidCenter, 0.36); const half = Math.max(target.distanceTo(rc) + CL.risks.r + 1.1, target.distanceTo(voidCenter) + 1.4); const dir = new V3(-0.22, -0.12, 1).normalize(); return {target, theta:Math.atan2(dir.x, dir.z), phi:Math.acos(clamp(dir.y, -0.9, 0.9)), radius:fit(half)}; }
+function chapterPreset(ch){ if (ch.leak) return presetLeak(); const r = visRect(), portrait = r.w / r.h < 0.85; return presetFor(ch.camFocus || ch.focus, portrait && ch.camP ? ch.camP : ch.cam); }
+const ease = k => k < 0.5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2;
+function flyTo(p, dur, noBulge){
+  const from = {target:ctl.target.clone(), theta:ctl.theta, phi:ctl.phi, radius:ctl.radius}; let tt = p.theta;
+  while (tt - from.theta > Math.PI) tt -= Math.PI * 2; while (tt - from.theta < -Math.PI) tt += Math.PI * 2;
+  ctl.anim = {from, to:{target:p.target, theta:tt, phi:p.phi, radius:p.radius}, t0:performance.now(), dur:RM ? 0.01 : (dur || 1.5), bulge:noBulge ? 0 : 0.12}; ctl.vt = ctl.vp = 0;
+}
+function updateControls(dt){
+  if (ctl.anim) {
+    const a = ctl.anim; const el = (performance.now() - a.t0) / 1000; const k = ease(Math.min(1, el / a.dur));
+    ctl.target.lerpVectors(a.from.target, a.to.target, k);
+    ctl.theta = a.from.theta + (a.to.theta - a.from.theta) * k; ctl.phi = a.from.phi + (a.to.phi - a.from.phi) * k;
+    ctl.radius = Math.exp(Math.log(a.from.radius) + (Math.log(a.to.radius) - Math.log(a.from.radius)) * k) * (1 + a.bulge * Math.sin(Math.PI * k));
+    if (el >= a.dur) ctl.anim = null;
+  } else if (ptrs.size === 0) {
+    ctl.theta += ctl.vt; ctl.phi = clamp(ctl.phi + ctl.vp, 0.32, Math.PI - 0.32); ctl.vt *= 0.9; ctl.vp *= 0.9;
+    const idle = performance.now() - lastInteract > 3500;
+    if (!RM && idle && (state.view === 'intro' || (state.view === 'explore' && !state.sel))) ctl.theta += dt * 0.07;
+  }
+  applyCam();
+}
+const pdist = () => { const a = [...ptrs.values()]; return Math.hypot(a[0].x - a[1].x, a[0].y - a[1].y); };
+canvas.addEventListener('pointerdown', e => {
+  if (state.view === 'intro') return;
+  canvas.setPointerCapture(e.pointerId); ptrs.set(e.pointerId, {x:e.clientX, y:e.clientY});
+  if (ptrs.size === 1) { downAt = {x:e.clientX, y:e.clientY, t:performance.now()}; moved = 0; }
+  if (ptrs.size === 2) pinchD = pdist();
+  ctl.anim = null; lastInteract = performance.now(); canvas.classList.add('drag');
+});
+canvas.addEventListener('pointermove', e => {
+  if (!ptrs.has(e.pointerId)) { if (e.pointerType === 'mouse' && state.view !== 'intro') hoverAt(e.clientX, e.clientY); return; }
+  const p = ptrs.get(e.pointerId), dx = e.clientX - p.x, dy = e.clientY - p.y; p.x = e.clientX; p.y = e.clientY;
+  if (ptrs.size === 1) { moved += Math.abs(dx) + Math.abs(dy); ctl.vt = -dx * 0.0055; ctl.vp = -dy * 0.0055; ctl.theta += ctl.vt; ctl.phi = clamp(ctl.phi + ctl.vp, 0.32, Math.PI - 0.32); }
+  else if (ptrs.size === 2) { const d = pdist(); if (pinchD > 0) ctl.radius = clamp(ctl.radius * pinchD / d, 4, 60); pinchD = d; moved += 20; }
+  lastInteract = performance.now();
+});
+function endPtr(e){
+  if (!ptrs.has(e.pointerId)) return; ptrs.delete(e.pointerId);
+  if (ptrs.size < 2) pinchD = 0;
+  if (ptrs.size === 0) { canvas.classList.remove('drag'); if (downAt && moved < 9 && performance.now() - downAt.t < 500) onTap(pick(e.clientX, e.clientY)); downAt = null; }
+}
+canvas.addEventListener('pointerup', endPtr); canvas.addEventListener('pointercancel', endPtr);
+canvas.addEventListener('wheel', e => { if (state.view === 'intro') return; e.preventDefault(); ctl.anim = null; ctl.radius = clamp(ctl.radius * Math.exp(e.deltaY * 0.0012), 4, 60); lastInteract = performance.now(); }, {passive:false});
+const ray = new THREE.Raycaster(), ndc = new THREE.Vector2();
+function pick(cx, cy){
+  const r = canvas.getBoundingClientRect(); ndc.set((cx - r.left) / r.width * 2 - 1, -((cy - r.top) / r.height) * 2 + 1);
+  camera.updateMatrixWorld(); ray.setFromCamera(ndc, camera);
+  const hs = ray.intersectObjects(hits, false);
+  for (const h of hs) { const n = N[h.object.userData.id]; if (n.op > 0.3) return n; }
+  return null;
+}
+let hoverRaf = 0;
+function hoverAt(x, y){ if (hoverRaf) return; hoverRaf = requestAnimationFrame(() => { hoverRaf = 0; const n = pick(x, y); const id = n ? n.id : null; if (id !== state.hover) { state.hover = id; canvas.classList.toggle('hov', !!id); } }); }
+
+/* ---------------- state changes ---------------- */
+function setMode(m){
+  state.mode = m; poolW.target = m === 'without' ? 1 : 0; poolT.target = m === 'with' ? 1 : 0;
+  document.querySelectorAll('.mode button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.mode === m)));
+}
+function setFocus(ids){ state.focus = ids && ids.length ? ids : null; focusSet = state.focus ? new Set(state.focus) : null; }
+function select(id){ state.sel = id; adjSel = new Set(); if (id) N[id].edges.forEach(e => { if (e.modes === 'both' || e.modes === state.mode) adjSel.add(other(e, id)); }); }
+function connections(n){ const seen = new Set(), out = []; n.edges.forEach(e => { if (!(e.modes === 'both' || e.modes === state.mode)) return; const o = other(e, n.id); if (seen.has(o)) return; seen.add(o); out.push(N[o]); }); return out; }
+function showSheet(){ sheet.hidden = false; }
+let mini = false;
+const chipN = o => '<button class="chip" type="button" data-node="' + o.id + '" style="--c:var(--c-' + o.cl + ')"><i></i>' + esc(o.name) + '</button>';
+const box = (cls, label, text) => '<div class="' + cls + ' hide-mini"><b>' + label + '</b><p>' + esc(text) + '</p></div>';
+const HANDLE = '<button class="handle" type="button" data-act="mini" aria-label="Show or hide details"></button>';
+const KEY = '<div class="key hide-mini"><span><i class="k-dot" style="background:var(--spark)"></i>Knowledge moving</span><span><i class="k-dot" style="background:var(--lost)"></i>Knowledge lost</span><span><i class="k-line" style="background:var(--c-core)"></i>Trupeer\'s fix</span><span><i class="k-dia" style="background:var(--c-consumers)"></i>AI agent</span></div>';
+function renderSheet(){
+  showSheet(); sheet.classList.toggle('mini', mini);
+  if (state.view === 'story') {
+    const i = state.chapter, ch = CHAPTERS[i], n = CHAPTERS.length; let dots = '';
+    for (let k = 0; k < n; k++) dots += '<i class="' + (k <= i ? 'on' : '') + '"></i>';
+    const btns = (i > 0 ? '<button class="secondary" type="button" data-act="prev">Back</button>' : '') +
+      (ch.final ? '<button class="primary" type="button" data-act="explore">Explore it yourself</button><button class="link" type="button" data-act="replay">Replay the story</button>'
+                : '<button class="primary" type="button" data-act="next">Next</button><button class="link" type="button" data-act="explore">Skip to explore</button>');
+    sheet.innerHTML = HANDLE + '<div class="g c3"><div class="g-main"><div class="prog"><span>Step ' + (i + 1) + ' of ' + n + '</span><span class="dots" aria-hidden="true">' + dots + '</span></div><h2>' + esc(ch.title) + '</h2><p class="hide-mini">' + esc(ch.body) + '</p></div>' + box('imp', 'Product implication', ch.imp) + '<div class="ctas v">' + btns + '</div></div>';
+  } else if (state.sel) {
+    const nd = N[state.sel], c = CL[nd.cl]; let fix = '';
+    if (nd.fix) fix = state.mode === 'with' ? box('fix', 'How Trupeer solves it', nd.fix) : '<p class="hint hide-mini">Switch to “With Trupeer” to see how Trupeer solves this.</p>';
+    const con = connections(nd).map(chipN).join('');
+    sheet.innerHTML = HANDLE + '<button class="x" type="button" data-act="close" aria-label="Close">×</button><div class="g c2"><div class="g-main"><div class="kick" style="--c:var(--c-' + c.id + ')"><i></i>' + esc(c.name) + '</div><h2>' + esc(nd.name) + '</h2><p class="hide-mini">' + esc(nd.desc) + '</p>' + fix + '</div><div class="g-side">' + box('imp', 'Product implication', nd.imp) + (con ? '<div class="conn hide-mini"><h3>Connected to</h3><div class="chips scroll">' + con + '</div></div>' : '') + '</div></div>';
+  } else if (state.focus && state.focus.length === 1) {
+    const c = CL[state.focus[0]];
+    sheet.innerHTML = HANDLE + '<button class="x" type="button" data-act="overview" aria-label="Back to the whole map">×</button><div class="g c2"><div class="g-main"><div class="kick" style="--c:var(--c-' + c.id + ')"><i></i>Group</div><h2>' + esc(c.name) + '</h2><p class="hide-mini">' + esc(c.blurb) + ' Tap a name below, or a dot in the map, to read more.</p></div><div class="g-side">' + box('imp', 'Product implication', c.imp) + '<div class="chips scroll hide-mini">' + c.nodes.map(chipN).join('') + '</div></div></div>';
+  } else {
+    const resume = state.fromStory != null ? 'Resume the story' : 'Replay the story';
+    sheet.innerHTML = HANDLE + '<div class="g c3"><div class="g-main"><h2>Explore the map</h2><p class="hide-mini">Drag to turn it. Use + and − or pinch to zoom. Tap any group name or dot to read more.</p>' + KEY + '</div><div class="chips scroll hide-mini">' + CLUSTERS.map(c => '<button class="chip" type="button" data-cl="' + c.id + '" style="--c:var(--c-' + c.id + ')"><i></i>' + esc(c.name) + '</button>').join('') + '</div><div class="ctas v"><button class="secondary" type="button" data-act="overview">Whole map</button><button class="link" type="button" data-act="replay">' + resume + '</button></div></div>';
+  }
+  requestAnimationFrame(layout);
+}
+function clusterPreset(id){ return presetFor([id], id === 'core' ? {target:[0, 0, 0], half:3.9, theta:-0.55, phi:0.84} : null); }
+function focusCluster(id){
+  if (state.view !== 'explore') toExplore(true);
+  const same = state.focus && state.focus.length === 1 && state.focus[0] === id;
+  select(null); setFocus(same ? null : [id]); renderSheet();
+  requestAnimationFrame(() => { layout(); flyTo(same ? presetOverview() : clusterPreset(id), 1.3); });
+}
+function zoomBy(f){ flyTo({target:ctl.target.clone(), theta:ctl.theta, phi:ctl.phi, radius:clamp(ctl.radius * f, 4, 60)}, 0.35, true); lastInteract = performance.now(); }
+function fitView(){
+  if (state.view === 'story') flyTo(chapterPreset(CHAPTERS[state.chapter]), 0.9);
+  else if (state.sel) { const n = N[state.sel]; flyTo({target:n.pos.clone().multiplyScalar(0.94), theta:ctl.theta, phi:ctl.phi, radius:clamp(fit(3.4), 7, 18)}, 0.9); }
+  else if (state.focus && state.focus.length === 1) flyTo(clusterPreset(state.focus[0]), 0.9);
+  else flyTo(presetOverview(), 0.9);
+  lastInteract = performance.now();
+}
+zoomEl.addEventListener('click', e => { const b = e.target.closest('button'); if (!b || state.view === 'intro') return; const z = b.dataset.zoom; if (z === 'in') zoomBy(0.78); else if (z === 'out') zoomBy(1.28); else fitView(); });
+function goChapter(i){
+  state.view = 'story'; state.chapter = i; state.fromStory = null; const ch = CHAPTERS[i];
+  setMode(ch.mode); setFocus(ch.focus); state.only = ch.only ? new Set(ch.only) : null; state.labels = ch.labels ? new Set(ch.labels) : null; select(null); renderSheet();
+  requestAnimationFrame(() => { layout(); flyTo(chapterPreset(ch), i === 0 ? 2.4 : 1.6); });
+}
+function toExplore(keepSel){
+  if (state.view === 'story' && keepSel) state.fromStory = state.chapter;
+  state.view = 'explore'; state.only = null; state.labels = null; if (!keepSel) { setFocus(null); select(null); }
+  renderSheet();
+  if (!keepSel) requestAnimationFrame(() => { layout(); flyTo(presetOverview(), 1.6); });
+}
+function focusNode(n){
+  if (state.view !== 'explore') toExplore(true);
+  setFocus(null); select(n.id); renderSheet();
+  requestAnimationFrame(() => { layout(); flyTo({target:n.pos.clone().multiplyScalar(0.94), theta:ctl.theta, phi:ctl.phi, radius:clamp(fit(3.4), 7, 18)}, 1.1); });
+}
+function onTap(n){ if (n) focusNode(n); else if (state.sel) { select(null); renderSheet(); } }
+function hideIntro(){ app.classList.remove('is-intro'); intro.classList.add('out'); setTimeout(() => { intro.hidden = true; }, RM ? 0 : 700); }
+$('#btnStory').addEventListener('click', () => { hideIntro(); goChapter(0); });
+$('#btnExplore').addEventListener('click', () => { hideIntro(); toExplore(false); });
+document.querySelectorAll('.mode button').forEach(b => b.addEventListener('click', () => { setMode(b.dataset.mode); if (state.sel) { select(state.sel); renderSheet(); } }));
+sheet.addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  if (b.dataset.node) return focusNode(N[b.dataset.node]);
+  if (b.dataset.cl) return focusCluster(b.dataset.cl);
+  const act = b.dataset.act;
+  if (act === 'next') goChapter(Math.min(CHAPTERS.length - 1, state.chapter + 1));
+  else if (act === 'prev') goChapter(Math.max(0, state.chapter - 1));
+  else if (act === 'explore') toExplore(false);
+  else if (act === 'replay') goChapter(state.fromStory != null ? state.fromStory : 0);
+  else if (act === 'overview') { setFocus(null); select(null); renderSheet(); requestAnimationFrame(() => { layout(); flyTo(presetOverview(), 1.3); }); }
+  else if (act === 'close') { select(null); renderSheet(); }
+  else if (act === 'mini') { mini = !mini; sheet.classList.toggle('mini', mini); requestAnimationFrame(layout); }
+});
+window.addEventListener('keydown', e => {
+  if (!listEl.hidden) { if (e.key === 'Escape') closeList(); return; }
+  if (state.view === 'story') { if (e.key === 'ArrowRight') goChapter(Math.min(CHAPTERS.length - 1, state.chapter + 1)); if (e.key === 'ArrowLeft') goChapter(Math.max(0, state.chapter - 1)); }
+  if (e.key === 'Escape' && state.sel) { select(null); renderSheet(); }
+  if (state.view !== 'intro') { if (e.key === '+' || e.key === '=') zoomBy(0.78); else if (e.key === '-' || e.key === '_') zoomBy(1.28); else if (e.key === '0') fitView(); }
+});
+let rzT = 0;
+function onResize(){ layout(); clearTimeout(rzT); rzT = setTimeout(() => { if (state.view === 'story') flyTo(chapterPreset(CHAPTERS[state.chapter]), 0.5); else if (state.view === 'explore' && !state.sel && !state.focus) flyTo(presetOverview(), 0.5); }, 160); }
+window.addEventListener('resize', onResize);
+if (window.ResizeObserver) new ResizeObserver(() => layout()).observe(sheet);
+
+/* ---------------- per-frame visuals ---------------- */
+function edgeTarget(e){
+  const vis = e.modes === 'both' ? 1 : (e.modes === 'with' ? modeT : 1 - modeT);
+  let base = ({risk:0.34, block:0.34, patch:0.45, gap:0.7, answer:0.85, capture:0.5, core:0.55, deliver:0.5, use:0.3, seg:0.22, out:0.45})[e.kind] * vis;
+  if (e.kind === 'risk' || e.kind === 'block') base *= 1 - 0.6 * modeT;
+  if (TH.dark) base *= 0.9; else base *= 1.15;
+  if (state.sel) return (e.a === state.sel || e.b === state.sel) ? Math.max(0.9 * vis, 0) : base * 0.1;
+  if (state.only) return (state.only.has(e.a) && state.only.has(e.b)) ? Math.min(1, base * 1.6) : base * 0.16;
+  if (focusSet) return (focusSet.has(N[e.a].cl) || focusSet.has(N[e.b].cl)) ? Math.min(1, base * 1.55) : base * 0.22;
+  if (state.view === 'explore') base *= (e.kind === 'use' || e.kind === 'seg') ? 0.55 : 0.85;
+  return base;
+}
+function nodeTarget(n){
+  let o = 1;
+  if (n.cl === 'status') o *= 1 - 0.62 * modeT;
+  if (n.cl === 'core') o *= 0.3 + 0.7 * modeT;
+  if (state.sel) { o = (n.id === state.sel || adjSel.has(n.id)) ? Math.max(o, 0.95) : o * 0.2; }
+  else if (state.only) { if (!state.only.has(n.id)) o *= 0.26; }
+  else if (focusSet && !focusSet.has(n.cl)) o *= 0.3;
+  return o;
+}
+const tmpC = new THREE.Color();
+let time = 0;
+function updateVisuals(dt){
+  modeT += ((state.mode === 'with' ? 1 : 0) - modeT) * Math.min(1, dt * 2.4);
+  const k = Math.min(1, dt * 5), dark = TH.dark;
+  NODES.forEach(n => {
+    n.op += (nodeTarget(n) - n.op) * k; const m = n.mesh.material; m.opacity = n.op;
+    const pulse = (n.cl === 'risks' || n.cl === 'barriers') ? (1 - modeT) : 0;
+    let s = n.base * (1 + (RM ? 0 : 0.2 * pulse * Math.sin(time * 2.6 + n.phase))) * (state.sel === n.id ? 1.45 : 1) * (state.hover === n.id ? 1.25 : 1);
+    if (n.id === 'core_trupeer') s = n.base * (0.86 + 0.14 * modeT) * (1 + (RM ? 0 : 0.04 * Math.sin(time * 1.8)));
+    n.mesh.scale.setScalar(s);
+    if (n.cl === 'risks' || n.cl === 'barriers') { tmpC.copy(n.col).lerp(TH.muted, 0.6 * modeT); m.color.copy(tmpC); m.emissive.copy(tmpC).multiplyScalar(dark ? 0.42 : 0.06); n.halo.material.color.copy(tmpC); }
+    n.halo.material.opacity = n.op * (dark ? 0.6 : 0.26) * (n.id === 'core_trupeer' ? (0.4 + 0.6 * modeT) : 1);
+  });
+  EDGES.forEach(e => { e.op += (edgeTarget(e) - e.op) * k; e.mat.opacity = e.op; e.mat.visible = e.op > 0.004; });
+  CLUSTERS.forEach(c => {
+    if (!c.bubble) return; let t = dark ? 0.55 : 0.42;
+    if (c.id === 'status') t *= 1 - 0.6 * modeT;
+    if (state.sel) t *= 0.35; else if (focusSet) t *= focusSet.has(c.id) ? 1.35 : 0.3;
+    c.op += (t - c.op) * k; c.bubble.material.uniforms.uOpacity.value = c.op * (1 + (RM ? 0 : 0.06 * Math.sin(time * 1.3 + c.center.x)));
+  });
+  const coreDim = (state.sel && state.sel !== 'core_trupeer' && N[state.sel].cl !== 'core') || (focusSet && !focusSet.has('core')) ? 0.4 : 1;
+  shell.material.opacity = (0.12 + 0.5 * modeT) * coreDim; if (!RM) { shell.rotation.y += dt * 0.25; shell.rotation.x += dt * 0.11; }
+  RINGS.forEach(r => { r.mesh.material.opacity = (0.07 + 0.43 * modeT) * coreDim; });
+  if (!RM) dust.rotation.y += dt * 0.004;
+  drain.material.opacity = (1 - modeT) * (dark ? 0.32 : 0.16) * (state.sel ? 0.3 : 1) * (1 + (RM ? 0 : 0.15 * Math.sin(time * 1.7)));
+  scene.fog.near = ctl.radius * 0.6; scene.fog.far = ctl.radius * 2.5;
+}
+function updatePool(P, dt){
+  P.fade += (P.target - P.fade) * Math.min(1, dt * 2.2);
+  const A = P.g.attributes;
+  if (P.fade < 0.004 && P.target === 0) { if (!P.cleared) { A.aAlpha.array.fill(0); A.aAlpha.needsUpdate = true; P.cleared = true; } return; }
+  P.cleared = false;
+  const pos = A.position.array, col = A.aColor.array, al = A.aAlpha.array, sz = A.aSize.array, spd = RM ? 0.35 : 1;
+  for (let i = 0; i < P.n; i++) {
+    let r = P.routes[P.ri[i]], t = P.t[i] + P.sp[i] * dt * spd / r.len;
+    if (t >= 1) { if (r.type === 'loop') t -= 1; else { P.ri[i] = pickRoute(P); r = P.routes[P.ri[i]]; t = 0; P.sp[i] = rr(1.7, 2.7); } }
+    P.t[i] = t;
+    const f = t * S, j = Math.min(S - 1, Math.floor(f)), u = f - j, a = j * 3, b = a + 3, o = i * 3;
+    pos[o] = r.pos[a] + (r.pos[b] - r.pos[a]) * u; pos[o + 1] = r.pos[a + 1] + (r.pos[b + 1] - r.pos[a + 1]) * u; pos[o + 2] = r.pos[a + 2] + (r.pos[b + 2] - r.pos[a + 2]) * u;
+    col[o] = r.col[a] + (r.col[b] - r.col[a]) * u; col[o + 1] = r.col[a + 1] + (r.col[b + 1] - r.col[a + 1]) * u; col[o + 2] = r.col[a + 2] + (r.col[b + 2] - r.col[a + 2]) * u;
+    let env = 1;
+    if (r.type !== 'loop') { env = Math.min(1, t / 0.06); const tail = r.type === 'lost' ? 0.2 : 0.12; if (t > 1 - tail) env *= (1 - t) / tail; }
+    al[i] = env * P.fade * (state.sel ? 0.35 : 1); sz[i] = P.sz[i] * (r.type === 'lost' && t > 0.6 ? 1 + (t - 0.6) * 1.6 : 1);
+  }
+  A.position.needsUpdate = A.aColor.needsUpdate = A.aAlpha.needsUpdate = A.aSize.needsUpdate = true;
+}
+
+/* ---------------- loop ---------------- */
+let last = performance.now(), running = true;
+function frame(now){
+  if (!running) return;
+  const dt = Math.min(0.05, (now - last) / 1000); last = now; time += dt;
+  updateControls(dt); updateVisuals(dt); updatePool(poolW, dt); updatePool(poolT, dt);
+  renderer.render(scene, camera); updateLabels();
+  requestAnimationFrame(frame);
+}
+document.addEventListener('visibilitychange', () => { running = !document.hidden; if (running) { last = performance.now(); requestAnimationFrame(frame); } });
+layout(); ctl.radius = presetOverview().radius * 1.15; applyCam();
+requestAnimationFrame(frame);
+api = {goChapter, toExplore, focusNode, setMode, state, ctl, N, CHAPTERS, screenOf:id => { camera.updateMatrixWorld(); const v = N[id].pos.clone().project(camera), r = canvas.getBoundingClientRect(); return {x:r.left + (v.x * 0.5 + 0.5) * r.width, y:r.top + (-v.y * 0.5 + 0.5) * r.height}; }};
+
+})();
+</script>
+</body>
+</html>
